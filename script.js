@@ -198,26 +198,71 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /**
-         * setTimeout の理由:
+         * 高さ更新のタイミング制御
          * 
-         * CSS transitionは0.5秒かけて実行されるため、クラスの追加/削除直後に
+         * CSS transitionは0.5秒（500ms）かけて実行されるため、クラスの追加/削除直後に
          * scrollHeightを取得すると、まだ途中の高さを取得してしまう可能性がある。
          * 
-         * 100ms待つことで:
-         * - CSS transitionが進行した後の高さを取得できる
-         * - 完全に終わるまで待つ必要はない（親サイトが調整するのに十分）
-         * - ユーザー体験を損なわない程度の短い遅延
+         * 展開時: 100ms待つ
+         * - 展開は視覚的にわかりやすく、途中の高さでも問題ない
+         * - より早く親サイトに通知できる
          * 
-         * 代替案:
-         * - transitionendイベントを待つ（より正確だが、複数の要素がある場合は複雑）
-         * - requestAnimationFrameを使用（1フレーム待つ、約16ms）
+         * 折りたたみ時: transitionendイベントを待つ（より正確）
+         * - 折りたたみ時は正確な最終高さを取得する必要がある
+         * - transitionendイベントでtransition完了を確実に検知
+         * - フォールバックとして600msのタイムアウトも設定
          */
-        console.log('[CHILD] Scheduling height update in 100ms');
-        setTimeout(function () {
-            updateHeightDisplay();
-            const totalTime = performance.now() - clickTime;
-            console.log(`[CHILD] Toggle action completed in ${totalTime.toFixed(2)}ms`);
-        }, 100);
+        if (isExpanded) {
+            // 展開時: 100ms待つ（視覚的な反応を早くするため）
+            console.log('[CHILD] Scheduling height update in 100ms (expanding)');
+            setTimeout(function () {
+                updateHeightDisplay();
+                const totalTime = performance.now() - clickTime;
+                console.log(`[CHILD] Toggle action completed in ${totalTime.toFixed(2)}ms`);
+            }, 100);
+        } else {
+            // 折りたたみ時: transitionendイベントを待つ（より正確）
+            console.log('[CHILD] Waiting for transitionend event (collapsing)');
+
+            let transitionEndFired = false;
+            let transitionTimeout = null;
+
+            // transitionendイベントリスナー（一度だけ実行）
+            const handleTransitionEnd = function (event) {
+                // 対象要素のtransitionのみ処理
+                if (event.target === expandableContent && !transitionEndFired) {
+                    transitionEndFired = true;
+                    console.log('[CHILD] transitionend event fired');
+
+                    if (transitionTimeout) {
+                        clearTimeout(transitionTimeout);
+                    }
+
+                    // イベントリスナーを削除
+                    expandableContent.removeEventListener('transitionend', handleTransitionEnd);
+
+                    // 高さを更新
+                    updateHeightDisplay();
+                    const totalTime = performance.now() - clickTime;
+                    console.log(`[CHILD] Toggle action completed in ${totalTime.toFixed(2)}ms`);
+                }
+            };
+
+            // transitionendイベントリスナーを追加
+            expandableContent.addEventListener('transitionend', handleTransitionEnd);
+
+            // フォールバック: 600ms後にタイムアウト（transitionが完了しない場合の保険）
+            transitionTimeout = setTimeout(function () {
+                if (!transitionEndFired) {
+                    console.log('[CHILD] Transition timeout, updating height anyway');
+                    transitionEndFired = true;
+                    expandableContent.removeEventListener('transitionend', handleTransitionEnd);
+                    updateHeightDisplay();
+                    const totalTime = performance.now() - clickTime;
+                    console.log(`[CHILD] Toggle action completed (timeout) in ${totalTime.toFixed(2)}ms`);
+                }
+            }, 600); // CSS transition (500ms) + 余裕を持たせて600ms
+        }
     });
 
     /**
