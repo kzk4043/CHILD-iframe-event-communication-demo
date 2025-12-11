@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Child Site - Iframe Height Adjustment Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Child Site</h1>
+            <p class="subtitle">Click the button below to change my height!</p>
+        </header>
+
+        <main>
+            <section class="content-section" id="main-content">
+                <div class="card">
+                    <h2>Initial Content</h2>
+                    <p>This is the initial content of the child site.</p>
+                    <p>The iframe height is currently set to fit this content.</p>
+                </div>
+
+                <div class="button-container">
+                    <button id="toggle-button" class="toggle-button">
+                        Click to Expand Content
+                    </button>
+                </div>
+
+                <div class="expandable-content" id="expandable-content">
+                    <div class="card expanded-card">
+                        <h2>Expanded Content</h2>
+                        <p>This content appears when you click the button above.</p>
+                        <p>The child site's height will increase to accommodate this new content.</p>
+                        <p>Observe whether the parent iframe automatically adjusts its height to fit this expanded content.</p>
+                    </div>
+
+                    <div class="card expanded-card">
+                        <h2>More Content</h2>
+                        <p>Here's even more content to make the height change more noticeable.</p>
+                        <ul>
+                            <li>Item 1: This is a list item</li>
+                            <li>Item 2: Another list item</li>
+                            <li>Item 3: Yet another list item</li>
+                            <li>Item 4: One more list item</li>
+                        </ul>
+                    </div>
+
+                    <div class="card expanded-card">
+                        <h2>Additional Information</h2>
+                        <p>If the iframe doesn't automatically adjust, you might see:</p>
+                        <ul>
+                            <li>A scrollbar inside the iframe</li>
+                            <li>Content being clipped or cut off</li>
+                            <li>The need for manual height adjustment</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <div class="card info-card">
+                    <h3>Current State</h3>
+                    <p id="state-info">Content is collapsed</p>
+                    <p><strong>Current height:</strong> <span id="current-height">-</span>px</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Child Site - Iframe Height Adjustment Demo</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
