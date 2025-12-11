@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Child Performance Test</title>
+</head>
+<body>
+    <h1>Child Performance Test Page</h1>
+    <p>This page will block for 5 seconds to simulate slow loading.</p>
+    <div id="status">Loading...</div>
+    <div id="timing"></div>
+
+    <script>
+        const startTime = performance.now();
+        const statusDiv = document.getElementById('status');
+        const timingDiv = document.getElementById('timing');
+
+        console.log('[CHILD] Performance test started');
+
+        // Simulate slow page by blocking for 5 seconds
+        function blockFor5Seconds() {
+            console.log('[CHILD] Starting 5 second block...');
+            const blockStart = performance.now();
+            
+            // Block the main thread for 5 seconds
+            const endTime = blockStart + 5000;
+            while (performance.now() < endTime) {
+                // Busy wait - blocks the thread
+            }
+            
+            const blockEnd = performance.now();
+            const blockDuration = blockEnd - blockStart;
+            console.log(`[CHILD] Block completed in ${blockDuration.toFixed(2)}ms`);
+            
+            return blockDuration;
+        }
+
+        // Execute the blocking operation
+        const blockDuration = blockFor5Seconds();
+
+        // Calculate total load time
+        const totalTime = performance.now() - startTime;
+        
+        statusDiv.textContent = 'Page loaded (after 5 second block)';
+        timingDiv.innerHTML = `
+            <p><strong>Block Duration:</strong> ${blockDuration.toFixed(2)}ms</p>
+            <p><strong>Total Load Time:</strong> ${totalTime.toFixed(2)}ms</p>
+            <p><strong>DOM Ready Time:</strong> ${(performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart).toFixed(2)}ms</p>
+        `;
+
+        console.log(`[CHILD] Total load time: ${totalTime.toFixed(2)}ms`);
+        console.log(`[CHILD] Performance test completed`);
+    </script>
+</body>
+</html>
+
