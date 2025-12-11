@@ -241,27 +241,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     // イベントリスナーを削除
                     expandableContent.removeEventListener('transitionend', handleTransitionEnd);
 
-                    // 高さを更新
-                    updateHeightDisplay();
-                    const totalTime = performance.now() - clickTime;
-                    console.log(`[CHILD] Toggle action completed in ${totalTime.toFixed(2)}ms`);
+                    /**
+                     * transitionendイベントが発火した後、ブラウザがレンダリングを完了して
+                     * scrollHeightを更新するまでに時間がかかる場合がある。
+                     * 
+                     * 解決策: requestAnimationFrameを複数回使用して、レンダリングサイクルを待つ
+                     * - 1回目のrequestAnimationFrame: 次のフレームを待つ
+                     * - 2回目のrequestAnimationFrame: レンダリングが完了したことを確認
+                     * 
+                     * これにより、DOMの高さが正確に更新された後に高さを取得できる
+                     */
+                    console.log('[CHILD] Waiting for rendering to complete after transitionend');
+                    requestAnimationFrame(function () {
+                        // 次のフレームを待つ
+                        requestAnimationFrame(function () {
+                            // レンダリングが完了した後、高さを更新
+                            console.log('[CHILD] Rendering complete, updating height');
+                            updateHeightDisplay();
+                            const totalTime = performance.now() - clickTime;
+                            console.log(`[CHILD] Toggle action completed in ${totalTime.toFixed(2)}ms`);
+                        });
+                    });
                 }
             };
 
             // transitionendイベントリスナーを追加
             expandableContent.addEventListener('transitionend', handleTransitionEnd);
 
-            // フォールバック: 600ms後にタイムアウト（transitionが完了しない場合の保険）
+            // フォールバック: 700ms後にタイムアウト（transitionが完了しない場合の保険）
             transitionTimeout = setTimeout(function () {
                 if (!transitionEndFired) {
                     console.log('[CHILD] Transition timeout, updating height anyway');
                     transitionEndFired = true;
                     expandableContent.removeEventListener('transitionend', handleTransitionEnd);
-                    updateHeightDisplay();
-                    const totalTime = performance.now() - clickTime;
-                    console.log(`[CHILD] Toggle action completed (timeout) in ${totalTime.toFixed(2)}ms`);
+
+                    // タイムアウト時もrequestAnimationFrameを使用
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () {
+                            updateHeightDisplay();
+                            const totalTime = performance.now() - clickTime;
+                            console.log(`[CHILD] Toggle action completed (timeout) in ${totalTime.toFixed(2)}ms`);
+                        });
+                    });
                 }
-            }, 600); // CSS transition (500ms) + 余裕を持たせて600ms
+            }, 700); // CSS transition (500ms) + レンダリング待機時間 + 余裕を持たせて700ms
         }
     });
 
